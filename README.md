@@ -2,7 +2,6 @@
 
 Python client library for [RTSPtoWebRTC](https://github.com/deepch/RTSPtoWebRTC)
 
-
 ## Development
 
 ```
