@@ -1,7 +1,8 @@
 """Client library for RTSPtoWebRTC server."""
 
 import base64
-from typing import List
+from typing import List, Optional
+from urllib.parse import urljoin
 
 import aiohttp
 
@@ -16,16 +17,20 @@ DATA_ERROR = "error"
 class Client:
     """Client for RTSPtoWebRTC server."""
 
-    def __init__(self, websession: aiohttp.ClientSession) -> None:
+    def __init__(self, websession: aiohttp.ClientSession, server_url: Optional[str] = None) -> None:
         """Initialize Client."""
         self._session = websession
+        if not server_url:
+            self._url = STREAM_PATH
+        else:
+            self._url = urljoin(server_url, STREAM_PATH)
 
     async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
         """Send the WebRTC offer to the RTSPtoWebRTC server."""
         sdp64 = base64.b64encode(offer_sdp.encode("utf-8")).decode("utf-8")
         try:
             resp = await self._session.post(
-                STREAM_PATH,
+                self._url,
                 data={
                     DATA_URL: rtsp_url,
                     DATA_SDP64: sdp64,
