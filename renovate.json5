@@ -1,0 +1,87 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "rangeStrategy": "replace",
+  "timezone": "America/Los_Angeles",
+  "assignees": ["allenporter"],
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate Dashboard",
+  "branchConcurrentLimit": 20,
+  "packageRules": [
+    {
+      "groupName": "group:flake8",
+      "matchPackageNames": ["flake8"],
+      "matchPackagePrefixes": [
+          "flake8-",
+          "pyflakes",
+          "mccabe",
+          "pycodestyle",
+      ],
+      "branchPrefix": "flake8",
+      "matchUpdateTypes": ["minor", "patch", "major"],
+      "groupSlug": "flake8",
+      "additionalBranchPrefix": "example",
+    },
+    {
+      "groupName": "group:pytest",
+      "matchPackageNames": ["pytest"],
+      "matchPackagePrefixes": ["pytest-"],
+    },
+    {
+      "groupName": "group:mypy",
+      "matchPackageNames": ["mypy"],
+      "matchPackagePrefixes": [
+          "mypy-",
+          "types-",
+          "typing-",
+      ],
+      "extends": ["schedule:weekends"],
+    },
+    {
+      "groupName": "group:aiohttp",
+      "matchPackageNames": ["aiohttp"],
+      "matchPackagePrefixes": [
+          "async-timeout",
+      ],
+      "groupSlip": "aiohttp",
+      "matchUpdateTypes": ["minor", "patch", "major"],
+    },
+    {
+      "description": "Minor updates are automatic",
+      "automerge": true,
+      "automergeType": "branch",
+      "matchUpdateTypes": ["minor", "patch"],
+      "excludePackagePrefixes": [
+        "flake8",
+        "pyflakes",
+        "mccabe",
+        "pycodestyle",
+        "mypy",
+        "types-",
+        "typing-",
+        "pytest",
+        "async-timeout",
+        "aiohttp",
+      ],
+    },
+    {
+      "description": "Major packages updated weekly",
+      "extends": ["schedule:weekends"],
+      "additionalBranchPrefix": "major",
+      "matchUpdateTypes": ["major"],
+      "excludePackagePrefixes": [
+        "flake8",
+        "pyflakes",
+        "mccabe",
+        "pycodestyle",
+        "mypy",
+        "types-",
+        "typing-",
+        "pytest",
+        "async-timeout",
+        "aiohttp",
+      ],
+    },
+  ],
+}
