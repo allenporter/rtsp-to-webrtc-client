@@ -2,7 +2,7 @@
 
 
 class ClientError(Exception):
-    """Base class for all client library errors."""
+    """Exception communicating with the server."""
 
 
 class ResponseError(ClientError):

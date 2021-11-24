@@ -58,3 +58,26 @@ async def test_server_failure_with_error(cli: TestClient) -> None:
     client = Client(cast(ClientSession, cli))
     with pytest.raises(ResponseError, match=r"server failure:.*a message.*"):
         await client.offer(OFFER_SDP, RTSP_URL)
+
+
+async def test_heartbeat(cli: TestClient) -> None:
+    """Test successful response from RTSPtoWebRTC server."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"] = [
+        aiohttp.web.Response(status=200),
+        aiohttp.web.Response(status=502),
+        aiohttp.web.Response(status=404),
+        aiohttp.web.Response(status=200),
+    ]
+
+    client = Client(cast(ClientSession, cli))
+
+    await client.heartbeat()
+
+    with pytest.raises(ResponseError):
+        await client.heartbeat()
+
+    with pytest.raises(ResponseError):
+        await client.heartbeat()
+
+    await client.heartbeat()
