@@ -67,7 +67,7 @@ class WebRTCClient:
                 f"RTSPtoWebRTC server communication failure: {err}"
             ) from err
 
-        error_detail = await Client._error_detail(resp)
+        error_detail = await WebRTCClient._error_detail(resp)
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
