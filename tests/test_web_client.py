@@ -86,7 +86,7 @@ def cli(
 
 
 async def test_list_streams(
-    cli: Callable[[], Awaitable[TestClient]],
+    cli: TestClient,
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
     """Test List Streams calls."""
