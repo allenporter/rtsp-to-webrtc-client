@@ -41,7 +41,7 @@ class WebClient:
         payload = await self._get_payload(resp)
         if not isinstance(payload, dict):
             raise ResponseError(
-                f"RTSPtoWeb server returned malformed payload: {result}"
+                f"RTSPtoWeb server returned malformed payload: {payload}"
             )
         return cast(dict[str, Any], payload)
 
