@@ -1,26 +1,30 @@
-from typing import Any, Awaitable, Callable, cast
+from __future__ import annotations
+from collections.abc import Awaitable, Callable
+from typing import cast
 
 import aiohttp
 import pytest
 from aiohttp import web
-from aiohttp.test_utils import TestClient
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
     """Handles the request, inserting response prepared by tests."""
     assert request.app["response"]
     response = request.app["response"].pop(0)
+    request.app["request"].append(request)
     return cast(aiohttp.web.Response, response)
 
 
 @pytest.fixture
-def cli(
-    loop: Any, aiohttp_client: Callable[[web.Application], Awaitable[TestClient]]
-) -> TestClient:
-    """Creates a fake aiohttp client."""
+def request_handler() -> Callable[
+    [aiohttp.web.Request], Awaitable[aiohttp.web.Response]
+]:
+    return handler
+
+
+@pytest.fixture
+def app() -> web.Application:
     app = web.Application()
-    app.router.add_get("/static", handler)
-    app.router.add_post("/stream", handler)
     app["response"] = []
-    client = loop.run_until_complete(aiohttp_client(app))
-    return cast(TestClient, client)
+    app["request"] = []
+    return app
