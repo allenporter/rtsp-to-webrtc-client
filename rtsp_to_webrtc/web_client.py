@@ -5,7 +5,7 @@ from __future__ import annotations
 import base64
 import enum
 import logging
-from typing import Any, List, Mapping, Optional, cast, Dict
+from typing import Any, Dict, List, Mapping, Optional, cast
 from urllib.parse import urljoin
 
 import aiohttp
@@ -69,7 +69,8 @@ class WebClient:
     async def reload_stream(self, stream_id: str) -> None:
         """Reload a stream."""
         resp = await self._request(
-            "get", RELOAD_STREAM_PATH.format(stream_id=stream_id),
+            "get",
+            RELOAD_STREAM_PATH.format(stream_id=stream_id),
         )
         await self._get_payload(resp)
 
@@ -81,48 +82,62 @@ class WebClient:
     async def delete_stream(self, stream_id: str) -> None:
         """Delete a stream."""
         resp = await self._request(
-            "get", DELETE_STREAM_PATH.format(stream_id=stream_id),
+            "get",
+            DELETE_STREAM_PATH.format(stream_id=stream_id),
         )
         await self._get_payload(resp)
 
-    async def add_channel(self, stream_id: str, channel_id: str, data: dict[str, Any]) -> None:
+    async def add_channel(
+        self, stream_id: str, channel_id: str, data: dict[str, Any]
+    ) -> None:
         """Add a channel"""
         resp = await self._request(
-            "post", ADD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id), json=data
+            "post",
+            ADD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            json=data,
         )
         await self._get_payload(resp)
 
-    async def update_channel(self, stream_id: str, channel_id: str, data: dict[str, Any]) -> None:
+    async def update_channel(
+        self, stream_id: str, channel_id: str, data: dict[str, Any]
+    ) -> None:
         """Update a channel."""
         resp = await self._request(
-            "post", EDIT_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id), json=data
+            "post",
+            EDIT_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            json=data,
         )
         await self._get_payload(resp)
 
     async def reload_channel(self, stream_id: str, channel_id: str) -> None:
         """Reload a channel."""
         resp = await self._request(
-            "get", RELOAD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            "get",
+            RELOAD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
         )
         await self._get_payload(resp)
 
     async def get_channel_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a channel."""
-        resp = await self._request("get", CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
+        resp = await self._request(
+            "get", CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id)
+        )
         return await self._get_dict(resp)
 
     async def get_codec_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a codecs."""
-        resp = await self._request("get", CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
+        resp = await self._request(
+            "get", CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id)
+        )
         return await self._get_dict(resp)
 
     async def delete_channel(self, stream_id: str, channel_id: str) -> None:
         """Delete a channel."""
         resp = await self._request(
-            "get", DELETE_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            "get",
+            DELETE_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
         )
         await self._get_payload(resp)
-
 
     async def webrtc(self, stream_id: str, channel_id: str, offer_sdp: str) -> str:
         """Send the WebRTC offer to the RTSPtoWeb server."""
@@ -155,9 +170,7 @@ class WebClient:
         try:
             resp = await self._session.request(method, url, **kwargs)
         except aiohttp.ClientError as err:
-            raise ClientError(
-                f"RTSPtoWeb server communication failure: {err}"
-            ) from err
+            raise ClientError(f"RTSPtoWeb server communication failure: {err}") from err
 
         error_detail = await WebClient._error_detail(resp)
         try:
@@ -189,7 +202,6 @@ class WebClient:
             )
         return cast(Dict[str, Any], payload)
 
- 
     def _request_url(self, path: str) -> str:
         """Return a request url for the specific path."""
         if not self._base_url:

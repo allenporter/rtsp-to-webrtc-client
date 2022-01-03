@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import base64
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
@@ -66,12 +67,22 @@ def setup_handler(
     app.router.add_get("/stream/{stream_id}/info", request_handler)
     app.router.add_get("/stream/{stream_id}/delete", request_handler)
     app.router.add_post("/stream/{stream_id}/channel/{channel_id}/add", request_handler)
-    app.router.add_post("/stream/{stream_id}/channel/{channel_id}/edit", request_handler)
-    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/reload", request_handler)
+    app.router.add_post(
+        "/stream/{stream_id}/channel/{channel_id}/edit", request_handler
+    )
+    app.router.add_get(
+        "/stream/{stream_id}/channel/{channel_id}/reload", request_handler
+    )
     app.router.add_get("/stream/{stream_id}/channel/{channel_id}/info", request_handler)
-    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/codec", request_handler)
-    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/delete", request_handler)
-    app.router.add_post("/stream/{stream_id}/channel/{channel_id}/webrtc", request_handler)
+    app.router.add_get(
+        "/stream/{stream_id}/channel/{channel_id}/codec", request_handler
+    )
+    app.router.add_get(
+        "/stream/{stream_id}/channel/{channel_id}/delete", request_handler
+    )
+    app.router.add_post(
+        "/stream/{stream_id}/channel/{channel_id}/webrtc", request_handler
+    )
 
 
 @pytest.fixture
@@ -142,9 +153,7 @@ async def test_list_streams_status_failure(cli: TestClient) -> None:
 async def test_list_streams_missing_payload(cli: TestClient) -> None:
     """Test failure response from RTSPtoWebRTC server."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"].append(
-        aiohttp.web.json_response({"status": 1})
-    )
+    cli.server.app["response"].append(aiohttp.web.json_response({"status": 1}))
 
     client = WebClient(cast(ClientSession, cli))
     with pytest.raises(ResponseError, match=r"server missing payload.*"):
@@ -166,8 +175,7 @@ async def test_list_streams_malformed_payload(cli: TestClient) -> None:
 async def test_add_stream(cli: TestClient) -> None:
     """Test Add Streams calls."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"].append(
-        aiohttp.web.json_response(SUCCESS_RESPONSE))
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
 
     client = WebClient(cast(ClientSession, cli))
     await client.add_stream("demo1", data=STREAM_1)
@@ -292,7 +300,6 @@ async def test_delete_channel(cli: TestClient) -> None:
     await client.delete_channel("demo1", "0")
     requests = cli.server.app["request"]
     assert len(requests) == 1
-
 
 
 async def test_webrtc(cli: TestClient) -> None:
