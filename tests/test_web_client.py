@@ -1,4 +1,5 @@
 from __future__ import annotations
+import base64
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
@@ -12,6 +13,7 @@ from rtsp_to_webrtc.web_client import WebClient
 
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 h.example.com\r\n..."
+ANSWER_PAYLOAD = base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")
 
 STREAM_1 = {
     "name": "test video",
@@ -160,7 +162,7 @@ async def test_add_stream(cli: TestClient) -> None:
 async def test_webrtc(cli: TestClient) -> None:
     """Test List Streams calls."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_SDP))
+    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
 
     client = WebClient(cast(ClientSession, cli))
     answer = await client.webrtc("demo1", "0", OFFER_SDP)
