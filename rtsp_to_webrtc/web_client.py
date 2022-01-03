@@ -1,6 +1,8 @@
-"""Client library for RTSPtoWebRTC server."""
+"""Client library for RTSPtoWebserver."""
 
 from __future__ import annotations
+
+import base64
 import enum
 import logging
 from typing import Any, List, Mapping, Optional, cast, Dict
@@ -53,19 +55,22 @@ class WebClient:
         await self._get_payload(resp)
 
     async def webrtc(self, stream_id: str, channel_id: str, offer_sdp: str) -> str:
-        """Send the WebRTC offer to the RTSPtoWebRTC server."""
+        """Send the WebRTC offer to the RTSPtoWeb server."""
+        sdp64 = base64.b64encode(offer_sdp.encode("utf-8")).decode("utf-8")
         data = {
-            "data": offer_sdp,
+            "data": sdp64,
         }
         resp = await self._request(
             "post",
             WEBRTC_PATH.format(stream_id=stream_id, channel_id=channel_id),
             data=data,
         )
-        return await resp.text()
+        text = await resp.text()
+        answer = base64.b64decode(text).decode("utf-8")
+        return answer
 
     async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
-        """Send the WebRTC offer to the RTSPtoWebRTC server."""
+        """Send the WebRTC offer to the RTSPtoWeb server."""
 
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
@@ -76,21 +81,22 @@ class WebClient:
         self, method: str, path: str, **kwargs: Optional[Mapping[str, Any]]
     ) -> aiohttp.ClientResponse:
         url = self._request_url(path)
-
+        _LOGGER.debug("request[%s] %s", method, url)
         try:
             resp = await self._session.request(method, url, **kwargs)
         except aiohttp.ClientError as err:
             raise ClientError(
-                f"RTSPtoWebRTC server communication failure: {err}"
+                f"RTSPtoWeb server communication failure: {err}"
             ) from err
 
         error_detail = await WebClient._error_detail(resp)
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
-            error_detail.insert(0, "RTSPtoWebRTC server failure")
+            error_detail.insert(0, "RTSPtoWeb server failure")
             error_detail.append(err.message)
             raise ResponseError(": ".join(error_detail)) from err
+        _LOGGER.debug("response %s", resp)
         return resp
 
     async def _get_payload(self, resp: aiohttp.ClientResponse) -> Any:
