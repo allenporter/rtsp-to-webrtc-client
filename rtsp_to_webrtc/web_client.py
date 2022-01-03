@@ -37,14 +37,7 @@ class WebClient:
     async def list_streams(self) -> dict[str, Any]:
         """List streams registered with the server."""
         resp = await self._request("get", STREAMS_PATH)
-        result = await resp.json()
-        if DATA_STATUS not in result:
-            raise ResponseError(f"RTSPtoWeb server missing status: {result}")
-        if str(result[DATA_STATUS]) != StatusCode.SUCCESS.value:
-            raise ResponseError(f"RTSPtoWeb server failure: {result}")
-        if DATA_PAYLOAD not in result:
-            raise ResponseError(f"RTSPtoWeb server missing payload: {result}")
-        payload = result[DATA_PAYLOAD]
+        payload = await self._get_payload(resp)
         if not isinstance(payload, dict):
             raise ResponseError(
                 f"RTSPtoWeb server returned malformed payload: {result}"
@@ -56,11 +49,7 @@ class WebClient:
         resp = await self._request(
             "post", ADD_STREAM_PATH.format(stream_id=stream_id), json=data
         )
-        result = await resp.json()
-        if DATA_STATUS not in result:
-            raise ResponseError(f"RTSPtoWeb server missing status: {result}")
-        if str(result[DATA_STATUS]) != StatusCode.SUCCESS.value:
-            raise ResponseError(f"RTSPtoWeb server failure: {result}")
+        await self._get_payload(resp)
 
     async def webrtc(self, stream_id: str, channel_id: str, offer_sdp: str) -> str:
         """Send the WebRTC offer to the RTSPtoWebRTC server."""
@@ -102,6 +91,17 @@ class WebClient:
             error_detail.append(err.message)
             raise ResponseError(": ".join(error_detail)) from err
         return resp
+
+    async def _get_payload(self, resp: aiohttp.ClientResponse) -> Any:
+        """Return payload from the response."""
+        result = await resp.json()
+        if DATA_STATUS not in result:
+            raise ResponseError(f"RTSPtoWeb server missing status: {result}")
+        if str(result[DATA_STATUS]) != StatusCode.SUCCESS.value:
+            raise ResponseError(f"RTSPtoWeb server failure: {result}")
+        if DATA_PAYLOAD not in result:
+            raise ResponseError(f"RTSPtoWeb server missing payload: {result}")
+        return result[DATA_PAYLOAD]
 
     def _request_url(self, path: str) -> str:
         """Return a request url for the specific path."""
