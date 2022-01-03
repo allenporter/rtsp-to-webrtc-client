@@ -106,7 +106,7 @@ async def test_list_streams_status_failure(cli: TestClient) -> None:
     """Test failure response from RTSPtoWebRTC server."""
     assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
-        aiohttp.web.json_response({"status": 1, "payload": "a message"}, status=502)
+        aiohttp.web.json_response({"status": 0, "payload": "a message"})
     )
 
     client = WebClient(cast(ClientSession, cli))
