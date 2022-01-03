@@ -3,7 +3,7 @@
 from __future__ import annotations
 import enum
 import logging
-from typing import Any, List, Mapping, Optional, cast
+from typing import Any, List, Mapping, Optional, cast, Dict
 from urllib.parse import urljoin
 
 import aiohttp
@@ -43,7 +43,7 @@ class WebClient:
             raise ResponseError(
                 f"RTSPtoWeb server returned malformed payload: {payload}"
             )
-        return cast(dict[str, Any], payload)
+        return cast(Dict[str, Any], payload)
 
     async def add_stream(self, stream_id: str, data: dict[str, Any]) -> None:
         """Add a stream."""
