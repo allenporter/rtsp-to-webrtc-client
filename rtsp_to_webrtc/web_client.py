@@ -1,5 +1,6 @@
 """Client library for RTSPtoWebRTC server."""
 
+from __future__ import annotations
 import enum
 import logging
 from typing import Any, List, Mapping, Optional, cast
