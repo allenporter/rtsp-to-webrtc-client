@@ -14,7 +14,6 @@ from rtsp_to_webrtc.web_client import WebClient
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 h.example.com\r\n..."
 ANSWER_PAYLOAD = base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")
-
 STREAM_1 = {
     "name": "test video",
     "channels": {
@@ -41,6 +40,18 @@ STREAM_2 = {
         },
     },
 }
+CHANNEL = {
+    "name": "ch1",
+    "url": "rtsp://example",
+    "on_demand": False,
+    "debug": False,
+    "status": 0,
+}
+
+SUCCESS_RESPONSE = {
+    "status": 1,
+    "payload": "success",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -49,8 +60,18 @@ def setup_handler(
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
     app.router.add_get("/streams", request_handler)
-    app.router.add_post("/stream/demo1/add", request_handler)
-    app.router.add_post("/stream/demo1/channel/0/webrtc", request_handler)
+    app.router.add_post("/stream/{stream_id}/add", request_handler)
+    app.router.add_post("/stream/{stream_id}/edit", request_handler)
+    app.router.add_get("/stream/{stream_id}/reload", request_handler)
+    app.router.add_get("/stream/{stream_id}/info", request_handler)
+    app.router.add_get("/stream/{stream_id}/delete", request_handler)
+    app.router.add_post("/stream/{stream_id}/channel/{channel_id}/add", request_handler)
+    app.router.add_post("/stream/{stream_id}/channel/{channel_id}/edit", request_handler)
+    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/reload", request_handler)
+    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/info", request_handler)
+    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/codec", request_handler)
+    app.router.add_get("/stream/{stream_id}/channel/{channel_id}/delete", request_handler)
+    app.router.add_post("/stream/{stream_id}/channel/{channel_id}/webrtc", request_handler)
 
 
 @pytest.fixture
@@ -65,11 +86,10 @@ def cli(
 
 
 async def test_list_streams(
-    cli: TestClient,
+    cli: Callable[[], Awaitable[TestClient]],
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
     """Test List Streams calls."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
         aiohttp.web.json_response(
             {
@@ -89,6 +109,8 @@ async def test_list_streams(
         "demo1": STREAM_1,
         "demo2": STREAM_2,
     }
+    requests = cli.server.app["request"]
+    assert requests == ["/streams"]
 
 
 async def test_list_streams_failure(
@@ -96,7 +118,6 @@ async def test_list_streams_failure(
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
     """Test List Streams calls."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(aiohttp.web.Response(status=502))
 
     client = WebClient(cast(ClientSession, cli))
@@ -106,7 +127,6 @@ async def test_list_streams_failure(
 
 async def test_list_streams_status_failure(cli: TestClient) -> None:
     """Test failure response from RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
         aiohttp.web.json_response({"status": 0, "payload": "a message"})
     )
@@ -118,7 +138,6 @@ async def test_list_streams_status_failure(cli: TestClient) -> None:
 
 async def test_list_streams_missing_payload(cli: TestClient) -> None:
     """Test failure response from RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
         aiohttp.web.json_response({"status": 1})
     )
@@ -130,7 +149,6 @@ async def test_list_streams_missing_payload(cli: TestClient) -> None:
 
 async def test_list_streams_malformed_payload(cli: TestClient) -> None:
     """Test failure response from RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
         aiohttp.web.json_response({"status": 1, "payload": ["list"]})
     )
@@ -140,28 +158,130 @@ async def test_list_streams_malformed_payload(cli: TestClient) -> None:
         await client.list_streams()
 
 
-
 async def test_add_stream(cli: TestClient) -> None:
-    """Test List Streams calls."""
-    assert isinstance(cli.server, TestServer)
+    """Test Add Streams calls."""
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.add_stream("demo1", data=STREAM_1)
+    requests = cli.server.app["request"]
+    assert requests == ["/stream/demo1/add"]
+
+
+async def test_update_stream(cli: TestClient) -> None:
+    """Test Update Streams calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.update_stream("demo1", data=STREAM_1)
+    requests = cli.server.app["request"]
+    assert requests == ["/stream/demo1/edit"]
+
+
+async def test_reload_stream(cli: TestClient) -> None:
+    """Test Reload Streams calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.reload_stream("demo1")
+    requests = cli.server.app["request"]
+    assert requests == ["/stream/demo1/reload"]
+
+
+async def test_get_stream_info(
+    cli: TestClient,
+    request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
+) -> None:
+    """Test Get Stream Info calls."""
     cli.server.app["response"].append(
         aiohttp.web.json_response(
             {
                 "status": 1,
-                "payload": "success",
+                "payload": STREAM_1,
             }
         )
     )
 
     client = WebClient(cast(ClientSession, cli))
-    await client.add_stream("demo1", data=STREAM_1)
+    data = await client.get_stream_info("demo1")
+    assert data == STREAM_1
+    requests = cli.server.app["request"]
+    assert requests == ["/stream/demo1/info"]
+
+
+async def test_delete_stream(cli: TestClient) -> None:
+    """Test Delete Streams calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.delete_stream("demo1")
+    requests = cli.server.app["request"]
+    assert requests == ["/stream/demo1/delete"]
+
+
+async def test_add_channel(cli: TestClient) -> None:
+    """Test Add channel calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.add_channel("demo1", "0", CHANNEL)
     requests = cli.server.app["request"]
     assert len(requests) == 1
 
 
+async def test_update_channel(cli: TestClient) -> None:
+    """Test Update channel calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.update_channel("demo1", "0", CHANNEL)
+    requests = cli.server.app["request"]
+    assert len(requests) == 1
+
+
+async def test_reload_channel(cli: TestClient) -> None:
+    """Test Reload channel calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.reload_channel("demo1", "0")
+    requests = cli.server.app["request"]
+    assert len(requests) == 1
+
+
+async def test_get_channel_info(
+    cli: TestClient,
+    request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
+) -> None:
+    """Test Get Stream Info calls."""
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": CHANNEL,
+            }
+        )
+    )
+
+    client = WebClient(cast(ClientSession, cli))
+    data = await client.get_channel_info("demo1", "0")
+    assert data == CHANNEL
+
+
+async def test_delete_channel(cli: TestClient) -> None:
+    """Test Reload channel calls."""
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+
+    client = WebClient(cast(ClientSession, cli))
+    await client.delete_channel("demo1", "0")
+    requests = cli.server.app["request"]
+    assert len(requests) == 1
+
+
+
 async def test_webrtc(cli: TestClient) -> None:
     """Test List Streams calls."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
 
     client = WebClient(cast(ClientSession, cli))
@@ -173,7 +293,6 @@ async def test_webrtc(cli: TestClient) -> None:
 
 async def test_webrtc_failure(cli: TestClient) -> None:
     """Test a failure talking to RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(aiohttp.web.Response(status=502))
 
     client = WebClient(cast(ClientSession, cli))
@@ -183,7 +302,6 @@ async def test_webrtc_failure(cli: TestClient) -> None:
 
 async def test_server_failure_with_error(cli: TestClient) -> None:
     """Test invalid response from RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"].append(
         aiohttp.web.json_response({"status": 1, "payload": "a message"}, status=502)
     )
@@ -195,7 +313,6 @@ async def test_server_failure_with_error(cli: TestClient) -> None:
 
 async def test_heartbeat(cli: TestClient) -> None:
     """Test successful response from RTSPtoWebRTC server."""
-    assert isinstance(cli.server, TestServer)
     cli.server.app["response"] = [
         aiohttp.web.Response(status=200),
         aiohttp.web.Response(status=502),

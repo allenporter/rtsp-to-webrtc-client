@@ -16,6 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 
 STREAMS_PATH = "/streams"
 ADD_STREAM_PATH = "/stream/{stream_id}/add"
+EDIT_STREAM_PATH = "/stream/{stream_id}/edit"
+RELOAD_STREAM_PATH = "/stream/{stream_id}/reload"
+STREAM_INFO_PATH = "/stream/{stream_id}/info"
+DELETE_STREAM_PATH = "/stream/{stream_id}/delete"
+ADD_CHANNEL_PATH = "/stream/{stream_id}/channel/{channel_id}/add"
+EDIT_CHANNEL_PATH = "/stream/{stream_id}/channel/{channel_id}/edit"
+RELOAD_CHANNEL_PATH = "/stream/{stream_id}/channel/{channel_id}/reload"
+CHANNEL_INFO_PATH = "/stream/{stream_id}/channel/{channel_id}/info"
+CODEC_INFO_PATH = "/stream/{stream_id}/channel/{channel_id}/codec"
+DELETE_CHANNEL_PATH = "/stream/{stream_id}/channel/{channel_id}/delete"
 WEBRTC_PATH = "/stream/{stream_id}/channel/{channel_id}/webrtc"
 
 DATA_STATUS = "status"
@@ -53,6 +63,86 @@ class WebClient:
             "post", ADD_STREAM_PATH.format(stream_id=stream_id), json=data
         )
         await self._get_payload(resp)
+
+    async def update_stream(self, stream_id: str, data: dict[str, Any]) -> None:
+        """Update a stream."""
+        resp = await self._request(
+            "post", EDIT_STREAM_PATH.format(stream_id=stream_id), json=data
+        )
+        await self._get_payload(resp)
+
+    async def reload_stream(self, stream_id: str) -> None:
+        """Reload a stream."""
+        resp = await self._request(
+            "get", RELOAD_STREAM_PATH.format(stream_id=stream_id),
+        )
+        await self._get_payload(resp)
+
+    async def get_stream_info(self, stream_id: str) -> dict[str, Any]:
+        """Get information about a stream."""
+        resp = await self._request("get", STREAM_INFO_PATH.format(stream_id=stream_id))
+        payload = await self._get_payload(resp)
+        if not isinstance(payload, dict):
+            raise ResponseError(
+                f"RTSPtoWeb server returned malformed payload: {payload}"
+            )
+        return cast(Dict[str, Any], payload)
+
+    async def delete_stream(self, stream_id: str) -> None:
+        """Delete a stream."""
+        resp = await self._request(
+            "get", DELETE_STREAM_PATH.format(stream_id=stream_id),
+        )
+        await self._get_payload(resp)
+
+    async def add_channel(self, stream_id: str, channel_id: str, data: dict[str, Any]) -> None:
+        """Add a channel"""
+        resp = await self._request(
+            "post", ADD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id), json=data
+        )
+        await self._get_payload(resp)
+
+    async def update_channel(self, stream_id: str, channel_id: str, data: dict[str, Any]) -> None:
+        """Update a channel."""
+        resp = await self._request(
+            "post", EDIT_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id), json=data
+        )
+        await self._get_payload(resp)
+
+    async def reload_channel(self, stream_id: str, channel_id: str) -> None:
+        """Reload a channel."""
+        resp = await self._request(
+            "get", RELOAD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+        )
+        await self._get_payload(resp)
+
+    async def get_channel_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
+        """Get information about a channel."""
+        resp = await self._request("get", CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
+        payload = await self._get_payload(resp)
+        if not isinstance(payload, dict):
+            raise ResponseError(
+                f"RTSPtoWeb server returned malformed payload: {payload}"
+            )
+        return cast(Dict[str, Any], payload)
+
+    async def get_codec_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
+        """Get information about a codecs."""
+        resp = await self._request("get", CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
+        payload = await self._get_payload(resp)
+        if not isinstance(payload, dict):
+            raise ResponseError(
+                f"RTSPtoWeb server returned malformed payload: {payload}"
+            )
+        return cast(Dict[str, Any], payload)
+
+    async def delete_channel(self, stream_id: str, channel_id: str) -> None:
+        """Delete a channel."""
+        resp = await self._request(
+            "get", DELETE_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+        )
+        await self._get_payload(resp)
+
 
     async def webrtc(self, stream_id: str, channel_id: str, offer_sdp: str) -> str:
         """Send the WebRTC offer to the RTSPtoWeb server."""

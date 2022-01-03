@@ -4,19 +4,23 @@ from typing import cast
 
 import aiohttp
 import pytest
+import logging
 from aiohttp import web
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
     """Handles the request, inserting response prepared by tests."""
-    assert request.app["response"]
+    if request.method == "POST":
+        await request.post()
     response = request.app["response"].pop(0)
-    request.app["request"].append(request)
+    request.app["request"].append(request.url.path)
     return cast(aiohttp.web.Response, response)
 
 
 @pytest.fixture
-def request_handler() -> Callable[
+async def request_handler() -> Callable[
     [aiohttp.web.Request], Awaitable[aiohttp.web.Response]
 ]:
     return handler
