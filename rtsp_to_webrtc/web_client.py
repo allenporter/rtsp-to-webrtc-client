@@ -50,12 +50,7 @@ class WebClient:
     async def list_streams(self) -> dict[str, Any]:
         """List streams registered with the server."""
         resp = await self._request("get", STREAMS_PATH)
-        payload = await self._get_payload(resp)
-        if not isinstance(payload, dict):
-            raise ResponseError(
-                f"RTSPtoWeb server returned malformed payload: {payload}"
-            )
-        return cast(Dict[str, Any], payload)
+        return await self._get_dict(resp)
 
     async def add_stream(self, stream_id: str, data: dict[str, Any]) -> None:
         """Add a stream."""
@@ -81,12 +76,7 @@ class WebClient:
     async def get_stream_info(self, stream_id: str) -> dict[str, Any]:
         """Get information about a stream."""
         resp = await self._request("get", STREAM_INFO_PATH.format(stream_id=stream_id))
-        payload = await self._get_payload(resp)
-        if not isinstance(payload, dict):
-            raise ResponseError(
-                f"RTSPtoWeb server returned malformed payload: {payload}"
-            )
-        return cast(Dict[str, Any], payload)
+        return await self._get_dict(resp)
 
     async def delete_stream(self, stream_id: str) -> None:
         """Delete a stream."""
@@ -119,22 +109,12 @@ class WebClient:
     async def get_channel_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a channel."""
         resp = await self._request("get", CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
-        payload = await self._get_payload(resp)
-        if not isinstance(payload, dict):
-            raise ResponseError(
-                f"RTSPtoWeb server returned malformed payload: {payload}"
-            )
-        return cast(Dict[str, Any], payload)
+        return await self._get_dict(resp)
 
     async def get_codec_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a codecs."""
         resp = await self._request("get", CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id))
-        payload = await self._get_payload(resp)
-        if not isinstance(payload, dict):
-            raise ResponseError(
-                f"RTSPtoWeb server returned malformed payload: {payload}"
-            )
-        return cast(Dict[str, Any], payload)
+        return await self._get_dict(resp)
 
     async def delete_channel(self, stream_id: str, channel_id: str) -> None:
         """Delete a channel."""
@@ -200,6 +180,16 @@ class WebClient:
             raise ResponseError(f"RTSPtoWeb server missing payload: {result}")
         return result[DATA_PAYLOAD]
 
+    async def _get_dict(self, resp: aiohttp.ClientResponse) -> dict[str, Any]:
+        """Return payload from the response."""
+        payload = await self._get_payload(resp)
+        if not isinstance(payload, dict):
+            raise ResponseError(
+                f"RTSPtoWeb server returned malformed payload: {payload}"
+            )
+        return cast(Dict[str, Any], payload)
+
+ 
     def _request_url(self, path: str) -> str:
         """Return a request url for the specific path."""
         if not self._base_url:
