@@ -89,6 +89,56 @@ async def test_list_streams(
     }
 
 
+async def test_list_streams_failure(
+    cli: TestClient,
+    request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
+) -> None:
+    """Test List Streams calls."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(aiohttp.web.Response(status=502))
+
+    client = WebClient(cast(ClientSession, cli))
+    with pytest.raises(ResponseError, match=r"server failure.*"):
+        await client.list_streams()
+
+
+async def test_list_streams_status_failure(cli: TestClient) -> None:
+    """Test failure response from RTSPtoWebRTC server."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(
+        aiohttp.web.json_response({"status": 1, "payload": "a message"}, status=502)
+    )
+
+    client = WebClient(cast(ClientSession, cli))
+    with pytest.raises(ResponseError, match=r"server failure:.*a message.*"):
+        await client.list_streams()
+
+
+async def test_list_streams_missing_payload(cli: TestClient) -> None:
+    """Test failure response from RTSPtoWebRTC server."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(
+        aiohttp.web.json_response({"status": 1})
+    )
+
+    client = WebClient(cast(ClientSession, cli))
+    with pytest.raises(ResponseError, match=r"server missing payload.*"):
+        await client.list_streams()
+
+
+async def test_list_streams_malformed_payload(cli: TestClient) -> None:
+    """Test failure response from RTSPtoWebRTC server."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(
+        aiohttp.web.json_response({"status": 1, "payload": ["list"]})
+    )
+
+    client = WebClient(cast(ClientSession, cli))
+    with pytest.raises(ResponseError, match=r"malformed payload.*"):
+        await client.list_streams()
+
+
+
 async def test_add_stream(cli: TestClient) -> None:
     """Test List Streams calls."""
     assert isinstance(cli.server, TestServer)
