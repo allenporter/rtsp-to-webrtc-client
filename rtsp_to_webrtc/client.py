@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 import logging
 
 import aiohttp
@@ -29,7 +30,7 @@ async def get_adaptive_client(
     webrtc_heartbeat = webrtc_client.heartbeat()
 
     client: WebRTCClientInterface | None = None
-    web_err: ClientError | None = None
+    web_err: Any | None = None
     try:
         await web_heartbeat
     except ClientError as err:
@@ -37,21 +38,15 @@ async def get_adaptive_client(
         web_err = err
     else:
         client = web_client
-    webrtc_err: ClientError | None = None
+    webrtc_err: Any | None = None
     try:
         await webrtc_heartbeat
     except ClientError as err:
         _LOGGER.debug("Discovery of RTSPtoWebRTC server failed: %s", str(err))
-        webrtc_err = err
+        if not client:
+            raise err
     else:
         if not client:
             client = webrtc_client
 
-    if client:
-        return client
-
-    raise ClientError(
-        "Discovery of RTSPtoWeb or RTSPtoWebRTC servers failed (%s, %s)",
-        str(web_err),
-        str(webrtc_err),
-    )
+    return client
