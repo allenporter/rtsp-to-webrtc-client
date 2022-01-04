@@ -15,6 +15,7 @@ from rtsp_to_webrtc.web_client import WebClient
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 h.example.com\r\n..."
 ANSWER_PAYLOAD = base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")
+RTSP_URL = "rtsp://example"
 STREAM_1 = {
     "name": "test video",
     "channels": {
@@ -357,3 +358,28 @@ async def test_heartbeat(cli: TestClient) -> None:
         await client.heartbeat()
 
     await client.heartbeat()
+
+
+async def test_offer(cli: TestClient) -> None:
+    """Test Offer call."""
+    assert isinstance(cli.server, TestServer)
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {},
+            }
+        )
+    )
+    # Add stream
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+    # Offer
+    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
+
+    client = WebClient(cast(ClientSession, cli))
+
+    answer_sdp = await client.offer(OFFER_SDP, RTSP_URL)
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert len(requests) == 3

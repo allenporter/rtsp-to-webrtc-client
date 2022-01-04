@@ -30,6 +30,10 @@ STREAM_1 = {
         },
     },
 }
+SUCCESS_RESPONSE = {
+    "status": 1,
+    "payload": "success",
+}
 
 
 @pytest.fixture
@@ -60,6 +64,7 @@ async def test_adaptive_web_client(
     """Test adapative client picks Web when both succeed."""
     app.router.add_get("/streams", request_handler)
     app.router.add_get("/static", request_handler)
+    app.router.add_post("/stream/{stream_id}/add", request_handler)
     app.router.add_post(
         "/stream/{stream_id}/channel/{channel_id}/webrtc", request_handler
     )
@@ -80,6 +85,17 @@ async def test_adaptive_web_client(
     cli.server.app["response"].append(
         aiohttp.web.Response(status=404),
     )
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {},
+            }
+        )
+    )
+    # Add stream
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
     # Web Offer
     cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
 
@@ -97,6 +113,7 @@ async def test_adaptive_both_succeed_web_client(
     """Test adapative client picks Web when both succeed."""
     app.router.add_get("/streams", request_handler)
     app.router.add_get("/static", request_handler)
+    app.router.add_post("/stream/{stream_id}/add", request_handler)
     app.router.add_post(
         "/stream/{stream_id}/channel/{channel_id}/webrtc", request_handler
     )
@@ -117,6 +134,17 @@ async def test_adaptive_both_succeed_web_client(
     cli.server.app["response"].append(
         aiohttp.web.Response(status=200),
     )
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {},
+            }
+        )
+    )
+    # Add stream
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
     # Web Offer
     cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
 
