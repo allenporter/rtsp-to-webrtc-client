@@ -9,3 +9,8 @@ class WebRTCClientInterface(ABC):
     @abstractmethod
     async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
         """Send the WebRTC offer to the server."""
+
+    @abstractmethod
+    async def heartbeat(self) -> None:
+        """Send a request to the server to determine if it is alive."""
+
