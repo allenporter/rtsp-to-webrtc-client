@@ -154,9 +154,6 @@ class WebClient:
         answer = base64.b64decode(text).decode("utf-8")
         return answer
 
-    async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
-        """Send the WebRTC offer to the RTSPtoWeb server."""
-
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
         # ignore result
