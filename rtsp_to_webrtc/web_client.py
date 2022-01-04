@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 import aiohttp
 
 from .exceptions import ClientError, ResponseError
+from .interface import WebRTCClientInterface
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class StatusCode(enum.Enum):
     SUCCESS = "1"
 
 
-class WebClient:
+class WebClient(WebRTCClientInterface):
     """Client for RTSPtoWeb server."""
 
     def __init__(
@@ -156,6 +157,8 @@ class WebClient:
 
     async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
         """Send the WebRTC offer to the RTSPtoWeb server."""
+        # Place holder offer API
+        return await self.webrtc("ignored", "0", offer_sdp)
 
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
@@ -184,7 +187,10 @@ class WebClient:
 
     async def _get_payload(self, resp: aiohttp.ClientResponse) -> Any:
         """Return payload from the response."""
-        result = await resp.json()
+        try:
+            result = await resp.json()
+        except aiohttp.ClientResponseError as err:
+            raise ResponseError("RTSPtoWeb server response decode error: ", str(err))
         if DATA_STATUS not in result:
             raise ResponseError(f"RTSPtoWeb server missing status: {result}")
         if str(result[DATA_STATUS]) != StatusCode.SUCCESS.value:

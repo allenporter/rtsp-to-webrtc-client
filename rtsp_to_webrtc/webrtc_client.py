@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 import aiohttp
 
 from .exceptions import ClientError, ResponseError
+from .interface import WebRTCClientInterface
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ DATA_SDP64 = "sdp64"
 DATA_ERROR = "error"
 
 
-class WebRTCClient:
+class WebRTCClient(WebRTCClientInterface):
     """Client for RTSPtoWebRTC server."""
 
     def __init__(
