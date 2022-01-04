@@ -50,8 +50,4 @@ async def get_adaptive_client(
     if client:
         return client
 
-    raise ClientError(
-        "Discovery of RTSPtoWeb or RTSPtoWebRTC servers failed (%s, %s)",
-        str(web_err),
-        str(webrtc_err),
-    )
+    raise webrtc_err
