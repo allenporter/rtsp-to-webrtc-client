@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import enum
+import hashlib
 import logging
 from typing import Any, Dict, List, Mapping, Optional, cast
 from urllib.parse import urljoin
@@ -157,8 +158,33 @@ class WebClient(WebRTCClientInterface):
 
     async def offer(self, offer_sdp: str, rtsp_url: str) -> str:
         """Send the WebRTC offer to the RTSPtoWeb server."""
-        # Place holder offer API
-        return await self.webrtc("ignored", "0", offer_sdp)
+        # Generate a fake stream id to use until API is updated to pass a
+        # client generated id
+        digest = hashlib.md5(rtsp_url.encode("utf-8")).digest()
+        stream_id = base64.b32encode(digest).decode("utf-8")
+        return await self.offer_stream_id(stream_id, offer_sdp, rtsp_url)
+
+    async def offer_stream_id(
+        self, stream_id: str, offer_sdp: str, rtsp_url: str
+    ) -> str:
+        """Send the WebRTC offer to the RTSPtoWeb server."""
+        # Generate a fake stream id to use until API is updated to pass a
+        # client generated id
+        streams = await self.list_streams()
+        stream_payload = {
+            "name": stream_id,
+            "channels": {
+                "0": {
+                    "name": "ch1",
+                    "url": rtsp_url,
+                },
+            },
+        }
+        if stream_id in streams:
+            await self.update_stream(stream_id, stream_payload)
+        else:
+            await self.add_stream(stream_id, stream_payload)
+        return await self.webrtc(stream_id, "0", offer_sdp)
 
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
