@@ -11,6 +11,11 @@ class WebRTCClientInterface(ABC):
         """Send the WebRTC offer to the server."""
 
     @abstractmethod
+    async def offer_stream_id(
+        self, stream_id: str, offer_sdp: str, rtsp_url: str
+    ) -> str:
+        """Send the WebRTC offer to the server."""
+
+    @abstractmethod
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
-

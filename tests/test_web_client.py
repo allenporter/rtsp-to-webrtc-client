@@ -382,4 +382,39 @@ async def test_offer(cli: TestClient) -> None:
     answer_sdp = await client.offer(OFFER_SDP, RTSP_URL)
     assert answer_sdp == ANSWER_SDP
     requests = cli.server.app["request"]
-    assert len(requests) == 3
+    assert requests == [
+        "/streams",
+        "/stream/Y7L7SZDOZXHIYFHESPL7YPKXHI======/add",
+        "/stream/Y7L7SZDOZXHIYFHESPL7YPKXHI======/channel/0/webrtc",
+    ]
+
+
+async def test_offer_update_stream(cli: TestClient) -> None:
+    """Test Offer updates an existing stream."""
+    assert isinstance(cli.server, TestServer)
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {
+                    "demo1": STREAM_1,
+                },
+            }
+        )
+    )
+    # Add stream
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+    # Offer
+    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
+
+    client = WebClient(cast(ClientSession, cli))
+
+    answer_sdp = await client.offer_stream_id("demo1", OFFER_SDP, RTSP_URL)
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert requests == [
+        "/streams",
+        "/stream/demo1/edit",
+        "/stream/demo1/channel/0/webrtc",
+    ]

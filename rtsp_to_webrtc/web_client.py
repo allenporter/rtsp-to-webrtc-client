@@ -162,6 +162,14 @@ class WebClient(WebRTCClientInterface):
         # client generated id
         digest = hashlib.md5(rtsp_url.encode("utf-8")).digest()
         stream_id = base64.b32encode(digest).decode("utf-8")
+        return await self.offer_stream_id(stream_id, offer_sdp, rtsp_url)
+
+    async def offer_stream_id(
+        self, stream_id: str, offer_sdp: str, rtsp_url: str
+    ) -> str:
+        """Send the WebRTC offer to the RTSPtoWeb server."""
+        # Generate a fake stream id to use until API is updated to pass a
+        # client generated id
         streams = await self.list_streams()
         stream_payload = {
             "name": stream_id,
