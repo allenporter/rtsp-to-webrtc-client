@@ -32,7 +32,7 @@ pytest-aiohttp==0.3.0
 pytest-asyncio==0.16.0
 pytest-cov==3.0.0
 pytest-mock==3.6.1
-regex==2021.11.10
+regex==2022.1.18
 six==1.16.0
 toml==0.10.2
 tomli==2.0.0
