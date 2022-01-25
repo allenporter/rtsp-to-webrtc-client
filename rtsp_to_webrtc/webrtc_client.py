@@ -1,5 +1,7 @@
 """Client library for RTSPtoWebRTC server."""
 
+from __future__ import annotations
+
 import base64
 import logging
 from typing import Any, List, Mapping, Optional
@@ -7,6 +9,7 @@ from urllib.parse import urljoin
 
 import aiohttp
 
+from .diagnostics import WEBRTC_DIAGNOSTICS as DIAGNOSTICS
 from .exceptions import ClientError, ResponseError
 from .interface import WebRTCClientInterface
 
@@ -48,6 +51,7 @@ class WebRTCClient(WebRTCClientInterface):
                 DATA_URL: rtsp_url,
                 DATA_SDP64: sdp64,
             },
+            label="stream",
         )
         data = await resp.json()
         if DATA_SDP64 not in data:
@@ -60,16 +64,24 @@ class WebRTCClient(WebRTCClientInterface):
 
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
-        await self._request("get", HEARTBEAT_PATH)
+        await self._request("get", HEARTBEAT_PATH, label="heartbeat")
 
     async def _request(
-        self, method: str, path: str, **kwargs: Optional[Mapping[str, Any]]
+        self,
+        method: str,
+        path: str,
+        **kwargs: Optional[Mapping[str, Any]] | str,
     ) -> aiohttp.ClientResponse:
         url = self._request_url(path)
+
+        label = kwargs["label"]
+        kwargs.pop("label")
+        DIAGNOSTICS.increment(f"{label}.request")
 
         try:
             resp = await self._session.request(method, url, **kwargs)
         except aiohttp.ClientError as err:
+            DIAGNOSTICS.increment(f"{label}.client_error")
             raise ClientError(
                 f"RTSPtoWebRTC server communication failure: {err}"
             ) from err
@@ -78,9 +90,12 @@ class WebRTCClient(WebRTCClientInterface):
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
+            DIAGNOSTICS.increment(f"{label}.response_error")
             error_detail.insert(0, "RTSPtoWebRTC server failure")
             error_detail.append(err.message)
             raise ResponseError(": ".join(error_detail)) from err
+
+        DIAGNOSTICS.increment(f"{label}.success")
         return resp
 
     def _request_url(self, path: str) -> str:

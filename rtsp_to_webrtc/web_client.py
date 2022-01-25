@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 
 import aiohttp
 
+from .diagnostics import WEB_DIAGNOSTICS as DIAGNOSTICS
 from .exceptions import ClientError, ResponseError
 from .interface import WebRTCClientInterface
 
@@ -51,20 +52,26 @@ class WebClient(WebRTCClientInterface):
 
     async def list_streams(self) -> dict[str, Any]:
         """List streams registered with the server."""
-        resp = await self._request("get", STREAMS_PATH)
+        resp = await self._request("get", STREAMS_PATH, label="list_streams")
         return await self._get_dict(resp)
 
     async def add_stream(self, stream_id: str, data: dict[str, Any]) -> None:
         """Add a stream."""
         resp = await self._request(
-            "post", ADD_STREAM_PATH.format(stream_id=stream_id), json=data
+            "post",
+            ADD_STREAM_PATH.format(stream_id=stream_id),
+            json=data,
+            label="add_stream",
         )
         await self._get_payload(resp)
 
     async def update_stream(self, stream_id: str, data: dict[str, Any]) -> None:
         """Update a stream."""
         resp = await self._request(
-            "post", EDIT_STREAM_PATH.format(stream_id=stream_id), json=data
+            "post",
+            EDIT_STREAM_PATH.format(stream_id=stream_id),
+            json=data,
+            label="update_stream",
         )
         await self._get_payload(resp)
 
@@ -73,12 +80,15 @@ class WebClient(WebRTCClientInterface):
         resp = await self._request(
             "get",
             RELOAD_STREAM_PATH.format(stream_id=stream_id),
+            label="reload_stream",
         )
         await self._get_payload(resp)
 
     async def get_stream_info(self, stream_id: str) -> dict[str, Any]:
         """Get information about a stream."""
-        resp = await self._request("get", STREAM_INFO_PATH.format(stream_id=stream_id))
+        resp = await self._request(
+            "get", STREAM_INFO_PATH.format(stream_id=stream_id), label="get_stream_info"
+        )
         return await self._get_dict(resp)
 
     async def delete_stream(self, stream_id: str) -> None:
@@ -86,6 +96,7 @@ class WebClient(WebRTCClientInterface):
         resp = await self._request(
             "get",
             DELETE_STREAM_PATH.format(stream_id=stream_id),
+            label="delete_stream",
         )
         await self._get_payload(resp)
 
@@ -97,6 +108,7 @@ class WebClient(WebRTCClientInterface):
             "post",
             ADD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
             json=data,
+            label="add_channel",
         )
         await self._get_payload(resp)
 
@@ -108,6 +120,7 @@ class WebClient(WebRTCClientInterface):
             "post",
             EDIT_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
             json=data,
+            label="update_channel",
         )
         await self._get_payload(resp)
 
@@ -116,20 +129,25 @@ class WebClient(WebRTCClientInterface):
         resp = await self._request(
             "get",
             RELOAD_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            label="reload_channel",
         )
         await self._get_payload(resp)
 
     async def get_channel_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a channel."""
         resp = await self._request(
-            "get", CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id)
+            "get",
+            CHANNEL_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            label="get_channel_info",
         )
         return await self._get_dict(resp)
 
     async def get_codec_info(self, stream_id: str, channel_id: str) -> dict[str, Any]:
         """Get information about a codecs."""
         resp = await self._request(
-            "get", CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id)
+            "get",
+            CODEC_INFO_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            label="get_codec_info",
         )
         return await self._get_dict(resp)
 
@@ -138,6 +156,7 @@ class WebClient(WebRTCClientInterface):
         resp = await self._request(
             "get",
             DELETE_CHANNEL_PATH.format(stream_id=stream_id, channel_id=channel_id),
+            label="delete_channel",
         )
         await self._get_payload(resp)
 
@@ -151,6 +170,7 @@ class WebClient(WebRTCClientInterface):
             "post",
             WEBRTC_PATH.format(stream_id=stream_id, channel_id=channel_id),
             data=data,
+            label="webrtc",
         )
         text = await resp.text()
         answer = base64.b64decode(text).decode("utf-8")
@@ -189,25 +209,34 @@ class WebClient(WebRTCClientInterface):
     async def heartbeat(self) -> None:
         """Send a request to the server to determine if it is alive."""
         # ignore result
-        await self._request("get", STREAMS_PATH)
+        await self._request("get", STREAMS_PATH, label="heartbeat")
 
     async def _request(
-        self, method: str, path: str, **kwargs: Optional[Mapping[str, Any]]
+        self,
+        method: str,
+        path: str,
+        **kwargs: Optional[Mapping[str, Any]] | str,
     ) -> aiohttp.ClientResponse:
+        label = kwargs["label"]
+        kwargs.pop("label")
         url = self._request_url(path)
         _LOGGER.debug("request[%s] %s", method, url)
+        DIAGNOSTICS.increment(f"{label}.request")
         try:
             resp = await self._session.request(method, url, **kwargs)
         except aiohttp.ClientError as err:
+            DIAGNOSTICS.increment(f"{label}.client_error")
             raise ClientError(f"RTSPtoWeb server communication failure: {err}") from err
 
         error_detail = await WebClient._error_detail(resp)
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
+            DIAGNOSTICS.increment(f"{label}.response_error")
             error_detail.insert(0, "RTSPtoWeb server failure")
             error_detail.append(err.message)
             raise ResponseError(": ".join(error_detail)) from err
+        DIAGNOSTICS.increment(f"{label}.success")
         _LOGGER.debug("response %s", resp)
         return resp
 
@@ -216,6 +245,7 @@ class WebClient(WebRTCClientInterface):
         try:
             result = await resp.json()
         except aiohttp.ClientResponseError as err:
+            DIAGNOSTICS.increment("decode_failure")
             raise ResponseError("RTSPtoWeb server response decode error: ", str(err))
         if DATA_STATUS not in result:
             raise ResponseError(f"RTSPtoWeb server missing status: {result}")
@@ -229,6 +259,7 @@ class WebClient(WebRTCClientInterface):
         """Return payload from the response."""
         payload = await self._get_payload(resp)
         if not isinstance(payload, dict):
+            DIAGNOSTICS.increment("malformed_payload")
             raise ResponseError(
                 f"RTSPtoWeb server returned malformed payload: {payload}"
             )

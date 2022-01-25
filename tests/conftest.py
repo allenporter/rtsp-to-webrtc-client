@@ -8,6 +8,8 @@ import aiohttp
 import pytest
 from aiohttp import web
 
+from rtsp_to_webrtc import diagnostics
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,3 +35,8 @@ def app() -> web.Application:
     app["response"] = []
     app["request"] = []
     return app
+
+@pytest.fixture(autouse=True)
+def reset_diagnostics():
+    yield
+    diagnostics.reset()
