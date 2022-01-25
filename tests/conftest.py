@@ -37,6 +37,6 @@ def app() -> web.Application:
     return app
 
 @pytest.fixture(autouse=True)
-def reset_diagnostics():
+def reset_diagnostics() -> None:
     yield
     diagnostics.reset()
