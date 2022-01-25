@@ -1,5 +1,6 @@
 """Diagnostics for debugging."""
 
+from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping
 from typing import Any
