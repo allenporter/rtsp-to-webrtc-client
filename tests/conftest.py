@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from typing import cast
 
 import aiohttp
@@ -36,7 +36,8 @@ def app() -> web.Application:
     app["request"] = []
     return app
 
+
 @pytest.fixture(autouse=True)
-def reset_diagnostics() -> None:
+def reset_diagnostics() -> Generator[None, None, None]:
     yield
     diagnostics.reset()
