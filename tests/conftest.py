@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from typing import cast
 
 import aiohttp
 import pytest
 from aiohttp import web
+
+from rtsp_to_webrtc import diagnostics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,3 +35,9 @@ def app() -> web.Application:
     app["response"] = []
     app["request"] = []
     return app
+
+
+@pytest.fixture(autouse=True)
+def reset_diagnostics() -> Generator[None, None, None]:
+    yield
+    diagnostics.reset()

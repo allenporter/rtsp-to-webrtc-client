@@ -10,7 +10,7 @@ import pytest
 from aiohttp import ClientSession, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from rtsp_to_webrtc.client import get_adaptive_client
+from rtsp_to_webrtc.client import get_adaptive_client, get_diagnostics
 from rtsp_to_webrtc.exceptions import ClientError
 
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
@@ -104,6 +104,21 @@ async def test_adaptive_web_client(
     answer_sdp = await client.offer(OFFER_SDP, RTSP_URL)
     assert answer_sdp == ANSWER_SDP
 
+    assert get_diagnostics() == {
+        "discovery": {"attempt": 1, "web.success": 1, "webrtc.failure": 1},
+        "web": {
+            "add_stream.request": 1,
+            "add_stream.success": 1,
+            "heartbeat.request": 1,
+            "heartbeat.success": 1,
+            "list_streams.request": 1,
+            "list_streams.success": 1,
+            "webrtc.request": 1,
+            "webrtc.success": 1,
+        },
+        "webrtc": {"heartbeat.request": 1, "heartbeat.response_error": 1},
+    }
+
 
 async def test_adaptive_both_succeed_web_client(
     cli_cb: Callable[[], Awaitable[TestClient]],
@@ -180,6 +195,17 @@ async def test_adaptive_webrtc_client(
 
     answer_sdp = await client.offer(OFFER_SDP, RTSP_URL)
     assert answer_sdp == ANSWER_SDP
+
+    assert get_diagnostics() == {
+        "discovery": {"attempt": 1, "webrtc.success": 1, "web.failure": 1},
+        "web": {"heartbeat.request": 1, "heartbeat.response_error": 1},
+        "webrtc": {
+            "stream.request": 1,
+            "stream.success": 1,
+            "heartbeat.request": 1,
+            "heartbeat.success": 1,
+        },
+    }
 
 
 async def test_adaptive_both_fail(
