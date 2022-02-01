@@ -86,12 +86,12 @@ async def test_server_failure_with_error(cli: TestClient) -> None:
 async def test_heartbeat(cli: TestClient) -> None:
     """Test successful response from RTSPtoWebRTC server."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"] = [
+    cli.server.app["response"].extend([
         aiohttp.web.Response(status=200),
         aiohttp.web.Response(status=502),
         aiohttp.web.Response(status=404),
         aiohttp.web.Response(status=200),
-    ]
+    ])
 
     client = Client(cast(ClientSession, cli))
 
