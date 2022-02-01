@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable, Generator
-from typing import cast
+from typing import cast, Any
 
 import aiohttp
 import pytest
