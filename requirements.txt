@@ -7,7 +7,7 @@ backports.entry-points-selectable==1.1.1
 black==22.1.0
 charset-normalizer==2.0.11
 click==8.0.3
-coverage==6.3
+coverage==6.3.1
 distlib==0.3.4
 filelock==3.4.2
 flake8==4.0.1
