@@ -185,18 +185,25 @@ class WebClient(WebRTCClientInterface):
         return await self.offer_stream_id(stream_id, offer_sdp, rtsp_url)
 
     async def offer_stream_id(
-        self, stream_id: str, offer_sdp: str, rtsp_url: str
+        self,
+        stream_id: str,
+        offer_sdp: str,
+        rtsp_url: str,
+        channel_data: dict[str, Any] | None = None,
     ) -> str:
         """Send the WebRTC offer to the RTSPtoWeb server."""
         # Generate a fake stream id to use until API is updated to pass a
         # client generated id
         streams = await self.list_streams()
+        if channel_data is None:
+            channel_data = {}
         stream_payload = {
             "name": stream_id,
             "channels": {
                 "0": {
                     "name": "ch1",
                     "url": rtsp_url,
+                    **channel_data,
                 },
             },
         }

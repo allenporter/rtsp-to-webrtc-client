@@ -39,17 +39,24 @@ class WebRTCClient(WebRTCClientInterface):
         return await self.offer_stream_id("ignored", offer_sdp, rtsp_url)
 
     async def offer_stream_id(
-        self, stream_id: str, offer_sdp: str, rtsp_url: str
+        self,
+        stream_id: str,
+        offer_sdp: str,
+        rtsp_url: str,
+        channel_data: dict[str, Any] | None = None,
     ) -> str:
         """Send the WebRTC offer to the RTSPtoWebRTC server."""
         _LOGGER.debug("rtsp_url=%s, offer=%s", rtsp_url, offer_sdp)
         sdp64 = base64.b64encode(offer_sdp.encode("utf-8")).decode("utf-8")
+        if channel_data is None:
+            channel_data = {}
         resp = await self._request(
             "post",
             STREAM_PATH,
             data={
                 DATA_URL: rtsp_url,
                 DATA_SDP64: sdp64,
+                **channel_data,
             },
             label="stream",
         )
