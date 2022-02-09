@@ -86,12 +86,14 @@ async def test_server_failure_with_error(cli: TestClient) -> None:
 async def test_heartbeat(cli: TestClient) -> None:
     """Test successful response from RTSPtoWebRTC server."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"].extend([
-        aiohttp.web.Response(status=200),
-        aiohttp.web.Response(status=502),
-        aiohttp.web.Response(status=404),
-        aiohttp.web.Response(status=200),
-    ])
+    cli.server.app["response"].extend(
+        [
+            aiohttp.web.Response(status=200),
+            aiohttp.web.Response(status=502),
+            aiohttp.web.Response(status=404),
+            aiohttp.web.Response(status=200),
+        ]
+    )
 
     client = Client(cast(ClientSession, cli))
 
@@ -104,3 +106,50 @@ async def test_heartbeat(cli: TestClient) -> None:
         await client.heartbeat()
 
     await client.heartbeat()
+
+
+async def test_offer_stream_id(cli: TestClient) -> None:
+    """Test offer with explicit stream id API."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(
+        aiohttp.web.json_response({"sdp64": ANSWER_PAYLOAD})
+    )
+
+    client = Client(cast(ClientSession, cli))
+    answer_sdp = await client.offer_stream_id("stream_id", OFFER_SDP, RTSP_URL)
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert requests == [
+        "/stream",
+    ]
+    assert cli.server.app["request-post"] == [
+        {
+            "url": "rtsps://example",
+            "sdp64": "dj0wDQpvPWNhcm9sIDI4OTA4NzY0ODcyIDI4OTA4NzY0ODcyIElOIElQNCAxMDAuMy42LjYNCi4uLg==",
+        }
+    ]
+
+
+async def test_offer_with_channel_data(cli: TestClient) -> None:
+    """Test that the channel data is passed, though likely ignored by server."""
+    assert isinstance(cli.server, TestServer)
+    cli.server.app["response"].append(
+        aiohttp.web.json_response({"sdp64": ANSWER_PAYLOAD})
+    )
+
+    client = Client(cast(ClientSession, cli))
+    answer_sdp = await client.offer_stream_id(
+        "stream_id", OFFER_SDP, RTSP_URL, channel_data={"insecure_skip_verify": True}
+    )
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert requests == [
+        "/stream",
+    ]
+    assert cli.server.app["request-post"] == [
+        {
+            "url": "rtsps://example",
+            "sdp64": "dj0wDQpvPWNhcm9sIDI4OTA4NzY0ODcyIDI4OTA4NzY0ODcyIElOIElQNCAxMDAuMy42LjYNCi4uLg==",
+            "insecure_skip_verify": "True",
+        }
+    ]

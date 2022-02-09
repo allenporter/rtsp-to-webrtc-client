@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable, Generator
-from typing import cast, Any
+from json import JSONDecodeError
+from typing import Any, cast
 
 import aiohttp
 import pytest
@@ -21,7 +22,11 @@ def loop(event_loop: Any) -> Any:
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
     """Handles the request, inserting response prepared by tests."""
     if request.method == "POST":
-        await request.post()
+        try:
+            request.app["request-json"].append(await request.json())
+        except JSONDecodeError:
+            pass
+        request.app["request-post"].append(await request.post())
     response = request.app["response"].pop(0)
     request.app["request"].append(request.url.path)
     return cast(aiohttp.web.Response, response)
@@ -39,6 +44,8 @@ def app() -> web.Application:
     app = web.Application()
     app["response"] = []
     app["request"] = []
+    app["request-json"] = []
+    app["request-post"] = []
     return app
 
 

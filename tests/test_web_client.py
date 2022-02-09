@@ -340,12 +340,14 @@ async def test_server_failure_with_error(cli: TestClient) -> None:
 async def test_heartbeat(cli: TestClient) -> None:
     """Test successful response from RTSPtoWebRTC server."""
     assert isinstance(cli.server, TestServer)
-    cli.server.app["response"].extend([
-        aiohttp.web.Response(status=200),
-        aiohttp.web.Response(status=502),
-        aiohttp.web.Response(status=404),
-        aiohttp.web.Response(status=200),
-    ])
+    cli.server.app["response"].extend(
+        [
+            aiohttp.web.Response(status=200),
+            aiohttp.web.Response(status=502),
+            aiohttp.web.Response(status=404),
+            aiohttp.web.Response(status=200),
+        ]
+    )
 
     client = WebClient(cast(ClientSession, cli))
 
@@ -417,4 +419,47 @@ async def test_offer_update_stream(cli: TestClient) -> None:
         "/streams",
         "/stream/demo1/edit",
         "/stream/demo1/channel/0/webrtc",
+    ]
+
+
+async def test_offer_channel_data(cli: TestClient) -> None:
+    """Test Offer updates an existing stream."""
+    assert isinstance(cli.server, TestServer)
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {},
+            }
+        )
+    )
+    # Add stream
+    cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
+    # Offer
+    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
+
+    client = WebClient(cast(ClientSession, cli))
+
+    answer_sdp = await client.offer_stream_id(
+        "demo1", OFFER_SDP, RTSP_URL, channel_data={"insecure_skip_verify": True}
+    )
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert requests == [
+        "/streams",
+        "/stream/demo1/add",
+        "/stream/demo1/channel/0/webrtc",
+    ]
+    assert cli.server.app["request-json"] == [
+        {
+            "channels": {
+                "0": {
+                    "insecure_skip_verify": True,
+                    "name": "ch1",
+                    "url": "rtsp://example",
+                }
+            },
+            "name": "demo1",
+        }
     ]
