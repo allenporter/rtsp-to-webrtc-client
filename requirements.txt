@@ -38,6 +38,6 @@ toml==0.10.2
 tomli==2.0.1
 tox==3.24.5
 typed-ast==1.5.2
-typing-extensions==4.0.1
+typing-extensions==4.1.0
 virtualenv==20.13.1
 yarl==1.7.2
