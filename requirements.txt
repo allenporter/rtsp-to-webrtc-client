@@ -39,5 +39,5 @@ tomli==2.0.1
 tox==3.24.5
 typed-ast==1.5.2
 typing-extensions==4.1.1
-virtualenv==20.13.2
+virtualenv==20.13.3
 yarl==1.7.2
