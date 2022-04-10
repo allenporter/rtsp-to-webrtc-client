@@ -21,11 +21,11 @@ STREAM_1 = {
     "channels": {
         "0": {
             "name": "ch1",
-            "url": "rtsp://example",
+            "url": RTSP_URL,
         },
         "1": {
             "name": "ch2",
-            "url": "rtsp://example",
+            "url": RTSP_URL,
         },
     },
 }
@@ -405,14 +405,14 @@ async def test_offer_update_stream(cli: TestClient) -> None:
             }
         )
     )
-    # Add stream
+    # Edit stream
     cli.server.app["response"].append(aiohttp.web.json_response(SUCCESS_RESPONSE))
     # Offer
     cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
 
     client = WebClient(cast(ClientSession, cli))
 
-    answer_sdp = await client.offer_stream_id("demo1", OFFER_SDP, RTSP_URL)
+    answer_sdp = await client.offer_stream_id("demo1", OFFER_SDP, f"{RTSP_URL}?example")
     assert answer_sdp == ANSWER_SDP
     requests = cli.server.app["request"]
     assert requests == [
@@ -463,3 +463,34 @@ async def test_offer_channel_data(cli: TestClient) -> None:
             "name": "demo1",
         }
     ]
+
+
+async def test_offer_update_no_op(cli: TestClient) -> None:
+    """Test that an offer is a no-up when stream matches."""
+    assert isinstance(cli.server, TestServer)
+    # List call
+    cli.server.app["response"].append(
+        aiohttp.web.json_response(
+            {
+                "status": 1,
+                "payload": {
+                    "demo1": STREAM_1,
+                },
+            }
+        )
+    )
+    # Offer
+    cli.server.app["response"].append(aiohttp.web.Response(body=ANSWER_PAYLOAD))
+
+    client = WebClient(cast(ClientSession, cli))
+
+    answer_sdp = await client.offer_stream_id("demo1", OFFER_SDP, RTSP_URL)
+    assert answer_sdp == ANSWER_SDP
+    requests = cli.server.app["request"]
+    assert requests == [
+        "/streams",
+        "/stream/demo1/channel/0/webrtc",
+    ]
+
+
+
