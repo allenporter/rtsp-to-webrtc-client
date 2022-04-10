@@ -208,7 +208,10 @@ class WebClient(WebRTCClientInterface):
             },
         }
         if stream_id in streams:
-            await self.update_stream(stream_id, stream_payload)
+            if streams[stream_id].get("channels", {}).get("0", {}).get("url") == rtsp_url:
+                _LOGGER.debug("Not updating stream url since already set")
+            else:
+                await self.update_stream(stream_id, stream_payload)
         else:
             await self.add_stream(stream_id, stream_payload)
         return await self.webrtc(stream_id, "0", offer_sdp)
