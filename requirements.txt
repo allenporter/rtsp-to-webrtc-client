@@ -16,7 +16,7 @@ idna==3.4
 iniconfig==1.1.1
 isort==5.10.1
 mccabe==0.7.0
-multidict==6.0.2
+multidict==6.0.3
 mypy==0.991
 mypy-extensions==0.4.3
 packaging==21.3
