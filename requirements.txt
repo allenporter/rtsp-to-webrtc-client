@@ -14,7 +14,7 @@ flake8==6.0.0
 frozenlist==1.3.3
 idna==3.4
 iniconfig==1.1.1
-isort==5.11.2
+isort==5.11.3
 mccabe==0.7.0
 multidict==6.0.3
 mypy==0.991
