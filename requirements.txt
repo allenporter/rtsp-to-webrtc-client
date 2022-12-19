@@ -10,4 +10,3 @@ pytest-aiohttp==1.0.4
 pytest-asyncio==0.20.3
 pytest-cov==4.0.0
 pytest-mock==3.10.0
-
