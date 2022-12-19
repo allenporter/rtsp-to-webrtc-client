@@ -36,7 +36,7 @@ regex==2022.10.31
 six==1.16.0
 toml==0.10.2
 tomli==2.0.1
-tox==3.28.0
+tox==4.0.14
 typed-ast==1.5.4
 typing-extensions==4.4.0
 virtualenv==20.17.1
