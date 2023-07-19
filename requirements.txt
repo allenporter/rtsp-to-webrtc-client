@@ -1,4 +1,4 @@
-aiohttp==3.8.4
+aiohttp==3.8.5
 black==23.7.0
 coverage==7.2.7
 flake8==6.0.0
