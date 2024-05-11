@@ -61,7 +61,7 @@ async def test_adaptive_web_client(
     app: web.Application,
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
-    """Test adapative client picks Web when both succeed."""
+    """Test adaptive client picks Web when both succeed."""
     app.router.add_get("/streams", request_handler)
     app.router.add_get("/static", request_handler)
     app.router.add_post("/stream/{stream_id}/add", request_handler)
@@ -125,7 +125,7 @@ async def test_adaptive_both_succeed_web_client(
     app: web.Application,
     request_handler: Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]],
 ) -> None:
-    """Test adapative client picks Web when both succeed."""
+    """Test adaptive client picks Web when both succeed."""
     app.router.add_get("/streams", request_handler)
     app.router.add_get("/static", request_handler)
     app.router.add_post("/stream/{stream_id}/add", request_handler)

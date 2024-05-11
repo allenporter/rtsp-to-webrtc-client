@@ -7,14 +7,14 @@ from typing import Any
 
 
 class Diagnostics:
-    """Information for RTSP to Web Client libaries."""
+    """Information for RTSP to Web Client libraries."""
 
     def __init__(self) -> None:
         """Initialize Diagnostics."""
         self._counter: Counter = Counter()
 
     def increment(self, key: str) -> None:
-        """Increment a counter for the spcified key/event."""
+        """Increment a counter for the specified key/event."""
         self._counter.update(Counter({key: 1}))
 
     def as_dict(self) -> Mapping[str, Any]:

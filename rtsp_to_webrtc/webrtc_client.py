@@ -113,7 +113,7 @@ class WebRTCClient(WebRTCClientInterface):
 
     @staticmethod
     async def _error_detail(resp: aiohttp.ClientResponse) -> List[str]:
-        """Resturns an error message string from the APi response."""
+        """Returns an error message string from the APi response."""
         if resp.status < 400:
             return []
         try:
