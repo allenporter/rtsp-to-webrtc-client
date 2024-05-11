@@ -1,75 +1,19 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base"
   ],
-  "rangeStrategy": "replace",
-  "timezone": "America/Los_Angeles",
   "assignees": ["allenporter"],
-  "dependencyDashboardTitle": "Renovate Dashboard",
-  "branchConcurrentLimit": 20,
   "packageRules": [
-    {
-      "groupName": "group:flake8",
-      "matchPackageNames": ["flake8"],
-      "matchPackagePrefixes": [
-          "flake8",
-          "pyflakes",
-          "mccabe",
-          "pycodestyle",
-      ],
-      "branchPrefix": "flake8",
-      "groupSlug": "flake8",
-      "separateMajorMinor": false,
-      "separateMinorPatch": false,
-    },
-    {
-      "groupName": "group:pytest",
-      "matchPackageNames": ["pytest"],
-      "matchPackagePrefixes": ["pytest-"],
-    },
-    {
-      "groupName": "group:mypy",
-      "matchPackageNames": ["mypy"],
-      "matchPackagePrefixes": [
-          "mypy-",
-          "types-",
-          "typing-",
-      ],
-      "extends": ["schedule:weekends"],
-    },
-    {
-      "groupName": "group:aiohttp",
-      "matchPackageNames": ["aiohttp"],
-      "matchPackagePrefixes": [
-          "async-timeout",
-      ],
-      "groupSlug": "aiohttp",
-      "matchUpdateTypes": ["minor", "patch", "major"],
-    },
     {
       "description": "Minor updates are automatic",
       "automerge": true,
       "automergeType": "branch",
-      "matchUpdateTypes": ["minor", "patch"],
-    },
-    {
-      "description": "Major packages updated weekly",
-      "extends": ["schedule:weekends"],
-      "additionalBranchPrefix": "major",
-      "matchUpdateTypes": ["major"],
-      "excludePackagePrefixes": [
-        "flake8",
-        "pyflakes",
-        "mccabe",
-        "pycodestyle",
-        "mypy",
-        "types-",
-        "typing-",
-        "pytest",
-        "async-timeout",
-        "aiohttp",
-      ],
-    },
+      "matchUpdateTypes": ["minor", "patch"]
+    }
   ],
-  "pre-commit": {"enabled": true},
+  "pip_requirements": {
+    "fileMatch": ["requirements_dev.txt"]
+  },
+  "pre-commit": {"enabled": true}
 }

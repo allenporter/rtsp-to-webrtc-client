@@ -1,0 +1,17 @@
+{
+  "template": "https://github.com/allenporter/cookiecutter-python",
+  "commit": "91983e8394f6b0233c94cdad0e4d955295aed125",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Allen Porter",
+      "email": "allen.porter@gmail.com",
+      "github_username": "allenporter",
+      "project_name": "rtsp_to_webrtc",
+      "description": "Python client library for RTSPtoWeb and RTSPtoWebRTC",
+      "version": "0.5.1",
+      "_template": "https://github.com/allenporter/cookiecutter-python"
+    }
+  },
+  "directory": null
+}
