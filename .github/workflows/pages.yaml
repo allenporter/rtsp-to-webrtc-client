@@ -28,16 +28,14 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Install dependencies
         run: |
           pip install -r requirements_dev.txt
-
       - run: pdoc ./rtsp_to_webrtc -o docs/
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
