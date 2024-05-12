@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable, Generator
 from json import JSONDecodeError
-from typing import Any, cast
+from typing import cast
 
 import aiohttp
 import pytest
