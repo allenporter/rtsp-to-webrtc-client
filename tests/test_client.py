@@ -37,14 +37,7 @@ SUCCESS_RESPONSE = {
 
 
 @pytest.fixture
-def event_loop() -> Any:
-    loop = asyncio.get_event_loop()
-    yield loop
-
-
-@pytest.fixture
 def cli_cb(
-    loop: Any,
     app: web.Application,
     aiohttp_client: Callable[[web.Application], Awaitable[TestClient]],
 ) -> Callable[[], Awaitable[TestClient]]:

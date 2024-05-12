@@ -14,11 +14,6 @@ from rtsp_to_webrtc import diagnostics
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def loop(event_loop: Any) -> Any:
-    return event_loop
-
-
 async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
     """Handles the request, inserting response prepared by tests."""
     if request.method == "POST":
