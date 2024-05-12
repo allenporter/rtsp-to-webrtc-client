@@ -30,12 +30,12 @@ def setup_handler(
 
 @pytest.fixture
 def cli(
-    loop: Any,
+    event_loop: Any,
     app: web.Application,
     aiohttp_client: Callable[[web.Application], Awaitable[TestClient]],
 ) -> TestClient:
     """Creates a fake aiohttp client."""
-    client = loop.run_until_complete(aiohttp_client(app))
+    client = event_loop.run_until_complete(aiohttp_client(app))
     return cast(TestClient, client)
 
 
