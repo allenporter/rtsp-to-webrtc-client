@@ -86,7 +86,7 @@ class WebRTCClient(WebRTCClientInterface):
         DIAGNOSTICS.increment(f"{label}.request")
 
         try:
-            resp = await self._session.request(method, url, **kwargs)
+            resp = await self._session.request(method, url, **kwargs)  # type: ignore[arg-type]
         except aiohttp.ClientError as err:
             DIAGNOSTICS.increment(f"{label}.client_error")
             raise ClientError(
