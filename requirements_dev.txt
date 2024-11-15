@@ -1,6 +1,6 @@
 -e .
 aiohttp==3.11.2
-coverage==7.6.5
+coverage==7.6.7
 mypy==1.13.0
 pdoc==15.0.0
 pip==24.3.1
