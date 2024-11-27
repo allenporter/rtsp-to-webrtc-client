@@ -1,5 +1,5 @@
 -e .
-aiohttp==3.11.7
+aiohttp==3.11.8
 coverage==7.6.8
 mypy==1.13.0
 pdoc==15.0.0
